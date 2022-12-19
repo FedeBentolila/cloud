@@ -1,0 +1,25 @@
+.formchat{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+}
+
+.body{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.mensajes{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.datos{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between
+}

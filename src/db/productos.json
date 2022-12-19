@@ -1,0 +1,50 @@
+[
+
+{
+
+
+"title": "mochila",
+
+
+"price": "100",
+
+
+"thumbnail": "https://http2.mlstatic.com/D_NQ_NP_987340-MLA48895298004_012022-O.webp",
+
+
+"id": 1
+
+},
+
+{
+
+
+"title": "lapicera",
+
+
+"price": "200",
+
+
+"thumbnail": "http://d3ugyf2ht6aenh.cloudfront.net/stores/001/275/036/products/fotos-para-tienda-nube-21-0ed6066c9caf82dadd16575537620459-640-0.webp",
+
+
+"id": 2
+
+},
+
+{
+
+
+"title": "lapiz",
+
+
+"price": "100",
+
+
+"thumbnail": "https://www.faber-castell.com.ar/-/media/Products/Product-Repository/CASTELL-9000/24-24-01-Pencil/119007-Graphite-pencil-CASTELL-9000-7B/Images/119007_0_PM99.ashx?sc_lang=es-AR&bc=ffffff&w=273&h=290&as=0&la=es-AR&hash=7E627ACCD27E02FD1021D6AC5BA29FEF",
+
+
+"id": 3
+
+}
+]

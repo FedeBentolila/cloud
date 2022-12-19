@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/normalizr@3.6.1/dist/normalizr.browser.min.js"></script>
+    <script src="chat.js"></script>
+    
+    <link rel="stylesheet" href="chat.css">
+</head>
+<body class="body">
+    <H1>Chat</H1>
+    <form class="formchat" onsubmit="return addMessage(this)">
+        <input type="email" id="email" placeholder="Tu Email" required>
+        <input type="text" id="nombre" placeholder="Nombre">
+        <input type="text" id="apellido" placeholder="Apellido">
+        <input type="number" id="edad" placeholder="edad">
+        <input type="text" id="alias" placeholder="alias">
+        <input type="text" id="avatar" placeholder="url avatar">  
+        <input type="text" id="texto" placeholder="Cuentanos algo">
+        <input type="submit" value="Enviar">
+    </form>
+    <div id="messages" ></div>
+
+    
+
+
+</body>
+</html>
