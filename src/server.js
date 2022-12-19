@@ -8,11 +8,16 @@ import { normalize, denormalize, schema } from "normalizr";
 import util from 'util';
 import mongoose from "mongoose";
 import { ContenedorMongo } from "./contenedores/ContenedorMongo.js";
+import { ContenedorFB } from "./contenedores/Contenedorfb.js";
 import { ConexionMongo } from "./config.js";
+import { ConexionFb } from "./config.js";
 
 let mensajesdemongo= new ContenedorMongo('mensajes')
 
+let mensajesdefb= new ContenedorFB('mensajes')
+
 ConexionMongo()
+
 
 
 function print (Objeto){
@@ -71,6 +76,8 @@ io.on('connection', function(socket){
       });
 
       mensajesdemongo.saveMongo(data)
+
+      mensajesdefb.saveFb(data)
 
 
     
