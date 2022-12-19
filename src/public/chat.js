@@ -4,15 +4,20 @@ const socket= io.connect();
 
 function render (data){
 
-    const author = new normalizr.schema.Entity('users')
+    const author = new normalizr.schema.Entity('authors')
     const mensaje = new normalizr.schema.Entity('mensajes', {
     author: author
     })
 
-    const denormalizedData= normalizr.denormalize(data.result, [mensaje], data.entities)
-    data= denormalizedData
     
-   const html= data.map((elem, index)=>{
+    const denormalizedData= normalizr.denormalize(data.result, [mensaje], data.entities)
+
+    let cantidadnormalizada= JSON.stringify(data).length
+    let cantidaddesnormalizada=JSON.stringify(denormalizedData).length
+
+    let porcentajedecompresion= 100-((cantidadnormalizada*100)/cantidaddesnormalizada)
+   
+   const html= denormalizedData.map((elem, index)=>{
         return (`<div class="mensajes">
         <div class="datos">
         <strong style="color:blue; font-weight: bold;">${elem.author.alias}</strong>
@@ -26,6 +31,8 @@ function render (data){
     }).join(" ");
 
     document.getElementById('messages').innerHTML= html
+    document.getElementById('compression').innerHTML= "Compresión " + porcentajedecompresion
+
 }
 
 socket.on('messages', function(data) {render(data);});

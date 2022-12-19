@@ -70,6 +70,8 @@ export class ContenedorFs {
             this.nombre,
             JSON.stringify(Arreglodeproductos, 1, "\n")
           );
+
+          return Objeto
       
         } catch (error) {
           console.log("hubo un error no se pudo guardar el ojbeto");

@@ -25,7 +25,7 @@ function print (Objeto){
 }
 
 //Schemas Normalizr
-const author = new schema.Entity('users')
+const author = new schema.Entity('authors')
 const mensaje = new schema.Entity('mensajes', {
   author: author
 })
@@ -58,8 +58,6 @@ io.on('connection', function(socket){
   mensajesdefs.getAllmensajes().then((res)=>{
     /////////////////////////Normalizr
     const normalizedData = normalize(res, [mensaje])
-
-    
     //////////////////////////////////////////
 
     socket.emit('messages', normalizedData);
@@ -70,27 +68,27 @@ io.on('connection', function(socket){
   })
 
   socket.on('new message', data=>{
+
+
       mensajesdefs.Savemensajes(data).then((res)=>{
         const normalizedData = normalize(res, [mensaje])
+        
         io.sockets.emit('messages', normalizedData)
+        
       });
 
       mensajesdemongo.saveMongo(data)
 
       mensajesdefb.saveFb(data)
 
-
     
   });
 
   socket.on('new lineaproducto', data=>{
 
-    productosdefs.Save(data).then(()=>{
-      let Objeto = {
-        ...data,
-        id: idproductos,
-      };
-    io.sockets.emit('lineaproducto2',Objeto )
+    productosdefs.Save(data).then((res)=>{
+      
+    io.sockets.emit('lineaproducto2',res )
   })
   });
 });
