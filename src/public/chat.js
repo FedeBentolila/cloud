@@ -31,7 +31,7 @@ function render (data){
     }).join(" ");
 
     document.getElementById('messages').innerHTML= html
-    document.getElementById('compression').innerHTML= "Compresión " + porcentajedecompresion
+    document.getElementById('compression').innerHTML= "Compresión " +  porcentajedecompresion.toPrecision(4)
 
 }
 
