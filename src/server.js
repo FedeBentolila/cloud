@@ -12,6 +12,14 @@ import { ContenedorFB } from "./contenedores/Contenedorfb.js";
 import { ConexionMongo } from "./config.js";
 import { ConexionFb } from "./config.js";
 
+//////////////////////////////////////////////////Cookies session
+import cookieParser from "cookie-parser";
+import session from "express-session";
+import MongoStore from "connect-mongo";
+const advancedOptions = { useNewUrlParser: true, useUnifiedTopology: true };
+import { response, json } from "express";
+
+
 let mensajesdemongo= new ContenedorMongo('mensajes')
 
 let mensajesdefb= new ContenedorFB('mensajes')
@@ -32,6 +40,29 @@ const mensaje = new schema.Entity('mensajes', {
 ////////////////////////
 
 const aplicacion = express();
+
+//EJS
+
+aplicacion.set("view engine", "ejs");
+aplicacion.use(express.json());
+aplicacion.use(express.urlencoded({ extended: true }));
+
+/////////////////////////////// mongostore
+aplicacion.use(cookieParser());
+aplicacion.use(session({
+  store: MongoStore.create({
+    mongoUrl: 'mongodb+srv://root:root@cluster0.wsvmh2e.mongodb.net/sesiones?retryWrites=true&w=majority',
+    mongoOptions: advancedOptions,
+  }),
+  secret: 'Secreto',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 600000}
+}));
+
+///////////////////////////////
+
+
 const httpServer= new HttpServer(aplicacion);
 const io= new Socket(httpServer);
 const PUERTO = 8080;
@@ -97,8 +128,60 @@ io.on('connection', function(socket){
 aplicacion.use(express.json());
 aplicacion.use(express.urlencoded({ extended: true }));
 
+////////////////EJS
+
+aplicacion.get("/login", (peticion, respuesta) => {
+  respuesta.render("login",{});
+});
+
+
+aplicacion.get("/logout", (peticion, respuesta) => {
+  let nombre= peticion.session.nombre
+  peticion.session.destroy(err=>{
+    if (!err) {
+      respuesta.render("logout",{nombre})
+    } else {
+      respuesta.send({status:'logout error', body: err})
+    }
+  })
+});
+
+aplicacion.get("/productos", (peticion, respuesta) => {
+  if (peticion.session.nombre) {
+    let nombre= peticion.session.nombre
+    productosdefs.getAll().then((res)=>{
+      respuesta.render("productos",{res, nombre })
+    })
+    
+  } else {
+      respuesta.render("login",{})
+  }
+  ;
+});
+
+
+aplicacion.post("/productos", (peticion, respuesta) => {
+  if (peticion.session.nombre) {
+    let nombre= peticion.session.nombre
+    productosdefs.getAll().then((res)=>{
+      respuesta.render("productos",{res, nombre })
+    })
+    
+  } else {
+    peticion.session.nombre= peticion.body.nombre
+    let nombre= peticion.session.nombre
+    productosdefs.getAll().then((res)=>{
+      respuesta.render("productos",{res, nombre })
+    }) 
+  }
+  ;
+});
+
+//////////////////////////////////
+
+
 aplicacion.get("/", (peticion, respuesta) => {
-  respuesta.sendFile('index.html', {root: publicRoot});
+    respuesta.sendFile('index.html', {root: publicRoot}) 
 });
 
 aplicacion.get("/chat", (peticion, respuesta) => {
@@ -108,5 +191,7 @@ aplicacion.get("/chat", (peticion, respuesta) => {
 aplicacion.get("/productos-test", (peticion, respuesta) => {
    respuesta.sendFile('indexfake.html', {root: publicRoot});
   });
+
+ 
 
 

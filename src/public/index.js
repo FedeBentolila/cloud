@@ -30,10 +30,24 @@ function render2 (data){
     
 }
 
+function render3 (data){
+
+   
+   const html= `
+        <div class="datos">
+        <strong style="color:blue; font-weight: bold;">${data}</strong>
+        </div>`;
+
+    document.getElementById('nombre').innerHTML= html
+   
+}
+
 socket.on('lineaproducto', function(data) {render(data);});
 
 
 socket.on('lineaproducto2', function(data) {render2(data);});
+
+socket.on('nombreusuario', function(data) {render3(data);});
 
 function addLineaproducto(e){
     const lineaproducto= {
