@@ -16,6 +16,11 @@ import session from "express-session";
 import MongoStore from "connect-mongo";
 const advancedOptions = { useNewUrlParser: true, useUnifiedTopology: true };
 import { response, json } from "express";
+///////////////////////////////////////////// pasport
+import passport from "passport";
+import bodyParser from "body-parser";
+import { ensureLoggedIn } from "connect-ensure-login";
+import { User } from "./config.js";
 
 let mensajesdemongo = new ContenedorMongo("mensajes");
 let mensajesdefb = new ContenedorFB("mensajes");
@@ -50,6 +55,19 @@ aplicacion.use(
     cookie: { maxAge: 600000 },
   })
 );
+
+
+//////////////////pasport
+
+aplicacion.use(bodyParser.urlencoded({ extended: false }));
+aplicacion.use(passport.initialize());
+aplicacion.use(passport.session());
+passport.use(User.createStrategy());
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+
+
 
 const httpServer = new HttpServer(aplicacion);
 const io = new Socket(httpServer);
@@ -97,31 +115,78 @@ io.on("connection", function (socket) {
 
 aplicacion.use(express.json());
 aplicacion.use(express.urlencoded({ extended: true }));
+
+
+aplicacion.get("/register", (peticion, respuesta) => {
+  respuesta.render("register", {});
+});
+
+aplicacion.post("/register", (peticion, respuesta) => {
+
+  User.register(new User({username: peticion.body.username}), peticion.body.password, (err, user) => {
+    if(err) {
+      console.log(err);
+      respuesta.render("registererror", {});
+    } else {
+      passport.authenticate('local')(peticion, respuesta, () => {
+        respuesta.render("login", {});
+      })}})
+
+});
+
+
+
 aplicacion.get("/login", (peticion, respuesta) => {
   respuesta.render("login", {});
 });
+
 aplicacion.get("/logout", (peticion, respuesta) => {
-  let nombre = peticion.session.nombre;
+  let nombre = peticion.user.username;
+  peticion.logout((err)=>{
+    if (err) { return next(err) };
+    respuesta.render("logout", { nombre })
+  });
+
+  /* let nombre = peticion.session.nombre;
   peticion.session.destroy((err) => {
     if (!err) {
       respuesta.render("logout", { nombre });
     } else {
       respuesta.send({ status: "logout error", body: err });
     }
-  });
+  }); */
 });
-aplicacion.get("/productos", (peticion, respuesta) => {
-  if (peticion.session.nombre) {
+
+aplicacion.get("/loginerror", (peticion, respuesta) => {
+  respuesta.render("loginerror", {});
+});
+
+aplicacion.get("/productos",ensureLoggedIn('/loginerror'), (peticion, respuesta) => {
+  let nombre = peticion.user.username;
+    productosdefs.getAll().then((res) => {
+      respuesta.render("productos", { res, nombre });
+    });
+
+  /* if (peticion.session.nombre) {
     let nombre = peticion.session.nombre;
     productosdefs.getAll().then((res) => {
       respuesta.render("productos", { res, nombre });
     });
   } else {
     respuesta.render("login", {});
-  }
+  } */
+
+
 });
-aplicacion.post("/productos", (peticion, respuesta) => {
-  if (peticion.session.nombre) {
+
+aplicacion.post("/productos",passport.authenticate('local', { failureRedirect: '/loginerror' }) ,function (peticion, respuesta) {
+  let nombre = peticion.user.username;
+  productosdefs.getAll().then((res) => {
+    respuesta.render("productos", { res, nombre });
+  });
+
+
+ /*  if (peticion.session.nombre) {
     let nombre = peticion.session.nombre;
     productosdefs.getAll().then((res) => {
       respuesta.render("productos", { res, nombre });
@@ -132,14 +197,19 @@ aplicacion.post("/productos", (peticion, respuesta) => {
     productosdefs.getAll().then((res) => {
       respuesta.render("productos", { res, nombre });
     });
-  }
+  } */
+
+
 });
+
 aplicacion.get("/", (peticion, respuesta) => {
   respuesta.sendFile("index.html", { root: publicRoot });
 });
+
 aplicacion.get("/chat", (peticion, respuesta) => {
   respuesta.sendFile("chat.html", { root: publicRoot });
 });
+
 aplicacion.get("/productos-test", (peticion, respuesta) => {
   respuesta.sendFile("indexfake.html", { root: publicRoot });
 });

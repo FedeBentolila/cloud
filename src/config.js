@@ -4,6 +4,8 @@ import { initializeApp } from "firebase-admin/app";
 
 import admin from "firebase-admin"
 
+import passportLocalMongoose from "passport-local-mongoose";
+
 const { credential } = admin;
 
 let serviceAccount = {
@@ -45,7 +47,7 @@ export async function ConexionMongo() {
         useUnifiedTopology: true,
       }
     );
-    console.log("ok conexion");
+    console.log("ok conexion mensajes");
   }
 
   export async function ConexionFb() {
@@ -57,3 +59,19 @@ export async function ConexionMongo() {
 
   console.log("ok fb");
 }
+
+
+
+const usersCollection= 'users';
+const Schemauser= mongoose.Schema
+const UserSchema= new Schemauser({
+    username: {type: String},
+    password: {type: String},
+});
+
+UserSchema.plugin(passportLocalMongoose);
+
+export const User= mongoose.model(
+    usersCollection,
+    UserSchema
+);
