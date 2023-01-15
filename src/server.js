@@ -20,6 +20,29 @@ import passport from "passport";
 import bodyParser from "body-parser";
 import { ensureLoggedIn } from "connect-ensure-login";
 import { User } from "./config.js";
+import * as dotenv from 'dotenv';
+import minimist from "minimist";
+import { fork } from "child_process";
+
+
+
+//////////////////////////////////////////////////////////////////////
+const options= {
+  alias: {
+    p: 'port'
+},
+  default: {
+      port: 8080
+  },
+}
+
+const puerto= minimist(process.argv.slice(2), options);
+
+const PORT = puerto.p
+
+//node src/server.js -p 9090
+
+dotenv.config()
 
 let mensajesdemongo = new ContenedorMongo("mensajes");
 let mensajesdefb = new ContenedorFB("mensajes");
@@ -42,8 +65,7 @@ aplicacion.use(cookieParser());
 aplicacion.use(
   session({
     store: MongoStore.create({
-      mongoUrl:
-        "mongodb+srv://root:root@cluster0.wsvmh2e.mongodb.net/sesiones?retryWrites=true&w=majority",
+      mongoUrl: process.env.CLAVEMONGOSESSION,
       mongoOptions: advancedOptions,
     }),
     secret: "Secreto",
@@ -61,12 +83,11 @@ passport.deserializeUser(User.deserializeUser());
 
 const httpServer = new HttpServer(aplicacion);
 const io = new Socket(httpServer);
-const PUERTO = 8080;
 const publicRoot = "./src/public";
 let productosdefs = new ContenedorFs("./src/db/productos.json");
 let mensajesdefs = new ContenedorFs("./src/db/mensajes.json");
-httpServer.listen(PUERTO, () => {
-  console.log(`Aplicación escuchando en el puerto: ${PUERTO}`);
+httpServer.listen(PORT, () => {
+  console.log(`Aplicación escuchando en el puerto: ${PORT}`);
 });
 
 aplicacion.use(express.static(publicRoot));
@@ -208,4 +229,37 @@ aplicacion.get("/chat", (peticion, respuesta) => {
 
 aplicacion.get("/productos-test", (peticion, respuesta) => {
   respuesta.sendFile("indexfake.html", { root: publicRoot });
+});
+
+
+const info= {
+  'Sistema operativo': process.platform,
+  'Version de node': process.version,
+  'Memoria': process.memoryUsage(),
+  'id del proceso': process.pid,
+  'Carpeta del proyecto': process.cwd(),
+  'Path de ejecucion': process.execPath,
+  'Argumentos de entrada': process.argv.slice(2)
+
+}
+
+aplicacion.get("/info", (peticion, respuesta) => {
+  respuesta.json(info);
+});
+
+aplicacion.get("/api/randoms", (peticion, respuesta) => {
+  let cantidad= peticion.query.cant
+  if (cantidad==undefined) {
+    cantidad=100000
+  }
+  const hijo = fork('./src/computo.js');
+  hijo.on('message', param => {
+    if (param == 'listo') {
+      hijo.send(cantidad);
+    } else {
+      respuesta.json({
+        resultado: param
+      });
+    }
+  })
 });
