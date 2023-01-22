@@ -20,29 +20,47 @@ import passport from "passport";
 import bodyParser from "body-parser";
 import { ensureLoggedIn } from "connect-ensure-login";
 import { User } from "./config.js";
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 import minimist from "minimist";
 import { fork } from "child_process";
+import os from 'os';
+import cluster from 'cluster';
 
+const numProcesadores = os.cpus().length;
 
+//////////////////////////CLUSTER O FORK/////////////////////////////////
+if (cluster.isPrimary && process.argv[3]=='CLUSTER') {
+  console.log(`Nuevo master: ${process.pid} corriendo, con ${numProcesadores} workers`);
 
-//////////////////////////////////////////////////////////////////////
-const options= {
+  for (let i = 0 ; i < numProcesadores ; i++) {
+    cluster.fork(); 
+  }
+
+  cluster.on('exit', (worker) => {
+    console.log(`El worker ${worker.process.pid} ha muerto`);
+    cluster.fork(); 
+  }); 
+
+} else {
+
+  //node src/server.js -p 9090
+
+/* const options = {
   alias: {
-    p: 'port'
-},
-  default: {
-      port: 8080
+    p: "port",
   },
-}
+  default: {
+    port: 8080,
+  },
+};
 
-const puerto= minimist(process.argv.slice(2), options);
+const puerto = minimist(process.argv.slice(2), options);
 
-const PORT = puerto.p
+const PORT = puerto.p; */
 
-//node src/server.js -p 9090
+const PORT = process.argv[2] || 8080;
 
-dotenv.config()
+dotenv.config();
 
 let mensajesdemongo = new ContenedorMongo("mensajes");
 let mensajesdefb = new ContenedorFB("mensajes");
@@ -88,6 +106,7 @@ let productosdefs = new ContenedorFs("./src/db/productos.json");
 let mensajesdefs = new ContenedorFs("./src/db/mensajes.json");
 httpServer.listen(PORT, () => {
   console.log(`Aplicación escuchando en el puerto: ${PORT}`);
+  console.log(`Worker en ${PORT}, PID: ${process.pid}`)
 });
 
 aplicacion.use(express.static(publicRoot));
@@ -231,35 +250,52 @@ aplicacion.get("/productos-test", (peticion, respuesta) => {
   respuesta.sendFile("indexfake.html", { root: publicRoot });
 });
 
-
-const info= {
-  'Sistema operativo': process.platform,
-  'Version de node': process.version,
+const info = {
+  "Sistema operativo": process.platform,
+  "Version de node": process.version,
   'Memoria': process.memoryUsage(),
-  'id del proceso': process.pid,
-  'Carpeta del proyecto': process.cwd(),
-  'Path de ejecucion': process.execPath,
-  'Argumentos de entrada': process.argv.slice(2)
-
-}
+  "id del proceso": process.pid,
+  "Carpeta del proyecto": process.cwd(),
+  "Path de ejecucion": process.execPath,
+  "Argumentos de entrada": process.argv.slice(2),
+  'numero de procesadores': numProcesadores
+};
 
 aplicacion.get("/info", (peticion, respuesta) => {
-  respuesta.json(info);
+
+  respuesta.send(`Servidor express en Puerto: ${PORT}, Workers: ${numProcesadores}, PID: ${process.pid} - ${(new Date()).toLocaleString()}`);
+
+  //respuesta.json(info);
+
 });
 
 aplicacion.get("/api/randoms", (peticion, respuesta) => {
-  let cantidad= peticion.query.cant
-  if (cantidad==undefined) {
-    cantidad=100000
+
+  respuesta.send(`Servidor express en Puerto: ${PORT}, Workers: ${numProcesadores}, PID: ${process.pid} - ${(new Date()).toLocaleString()}`);
+
+// EJERCICIO PREVIO
+/*   let cantidad = peticion.query.cant;
+  if (cantidad == undefined) {
+    cantidad = 100000;
   }
-  const hijo = fork('./src/computo.js');
-  hijo.on('message', param => {
-    if (param == 'listo') {
+  const hijo = fork("./src/computo.js");
+  hijo.on("message", (param) => {
+    if (param == "listo") {
       hijo.send(cantidad);
     } else {
       respuesta.json({
-        resultado: param
+        resultado: param,
       });
     }
-  })
+  }); */
+
+
 });
+
+  //cierre del else de CLUSTER O FORK
+}
+
+
+
+
+

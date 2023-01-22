@@ -1,0 +1,26 @@
+FOREVER
+
+A) forever start src/server.js 8081
+
+B) forever list
+info:    Forever processes running
+data:        uid  command                            script
+                        forever pid   id logfile                          uptime
+data:    [0] Jepb "C:\Program Files\nodejs\node.exe"
+ C:\Users\feder\Desktop\coderhouse\16fakernormalizado\src\server.js 8081 4940    14436    
+ C:\Users\feder\.forever\Jepb.log 0:0:2:13.40700000000001    
+
+
+PM2
+
+A) MODO fork
+
+pm2 start src/server.js --name="ServerX" --watch -- PORT
+
+
+B) MODO CLUSTER
+
+pm2 start src/server.js --name="ServerX" --watch -i -- PORT
+
+
+
