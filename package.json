@@ -5,13 +5,15 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/server.js"
+    "test": "node src/benchmark.js",
+    "start": "0x src/server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "autocannon": "^7.10.0",
     "body-parser": "^1.20.1",
+    "compression": "^1.7.4",
     "connect-ensure-login": "^0.1.1",
     "connect-mongo": "^4.6.0",
     "cookie-parser": "^1.4.6",
@@ -23,6 +25,7 @@
     "firebase-admin": "^11.4.0",
     "grep": "^0.1.0",
     "handlebars": "^4.7.7",
+    "log4js": "^6.7.1",
     "minimist": "^1.2.7",
     "moment": "^2.29.4",
     "mongoose": "^6.8.0",

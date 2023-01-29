@@ -1,4 +1,6 @@
 import express from "express";
+import  log4js  from "log4js";
+import compression from "compression";
 import { Server as HttpServer } from "http";
 import { Server as Socket } from "socket.io";
 import { ContenedorFs } from "./contenedores/Contenedorfs.js";
@@ -27,6 +29,27 @@ import os from 'os';
 import cluster from 'cluster';
 
 const numProcesadores = os.cpus().length;
+
+
+/////////////////////////log4js
+log4js.configure({
+  appenders:{
+    consolalog:{type:"console"},
+    warnlog: {type:'file', filename: 'warn.log'},
+    errorlog: {type:'file', filename: 'error.log'},
+  },
+  categories:{
+    default:{appenders:['consolalog'], level:'all'},
+    consola:{appenders:['consolalog'], level:'info'},
+    warning:{appenders:['warnlog'], level:'warn'},
+    error:{appenders:['errorlog'], level:'error'},
+  }
+})
+
+const loggerConsola= log4js.getLogger('consola')
+const loggerWarn= log4js.getLogger('warning')
+const loggerError= log4js.getLogger('error')
+///////////////////////
 
 //////////////////////////CLUSTER O FORK/////////////////////////////////
 if (cluster.isPrimary && process.argv[3]=='CLUSTER') {
@@ -76,6 +99,7 @@ const mensaje = new schema.Entity("mensajes", {
   author: author,
 });
 const aplicacion = express();
+aplicacion.use(compression())
 aplicacion.set("view engine", "ejs");
 aplicacion.use(express.json());
 aplicacion.use(express.urlencoded({ extended: true }));
@@ -95,6 +119,12 @@ aplicacion.use(
 aplicacion.use(bodyParser.urlencoded({ extended: false }));
 aplicacion.use(passport.initialize());
 aplicacion.use(passport.session());
+
+aplicacion.use((req, res, next) => {
+  loggerConsola.info(`${req.method} ${req.url}`);
+  next();
+});
+
 passport.use(User.createStrategy());
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
@@ -116,29 +146,44 @@ io.on("connection", function (socket) {
 
   productosdefs.getAllfakeproducts(5).then((res) => {
     socket.emit("fakeproducts", res);
+  }).catch((err)=>{
+    loggerError.error(err);
+    res.status(err.status || 500).send(err.message)
   });
 
   mensajesdefs.getAllmensajes().then((res) => {
     const normalizedData = normalize(res, [mensaje]);
     socket.emit("messages", normalizedData);
+  }).catch((err)=>{
+    loggerError.error(err);
+    res.status(err.status || 500).send(err.message)
   });
 
   productosdefs.getAll().then((res) => {
     socket.emit("lineaproducto", res);
+  }).catch((err)=>{
+    loggerError.error(err);
+    res.status(err.status || 500).send(err.message)
   });
 
   socket.on("new message", (data) => {
     mensajesdefs.Savemensajes(data).then((res) => {
       const normalizedData = normalize(res, [mensaje]);
       io.sockets.emit("messages", normalizedData);
+    }).catch((err)=>{
+      loggerError.error(err);
+      res.status(err.status || 500).send(err.message)
     });
     mensajesdemongo.saveMongo(data);
-    mensajesdefb.saveFb(data);
+    // ATENCION esta caido firebase por falta de actualizar claves: corregir :   mensajesdefb.saveFb(data);
   });
 
   socket.on("new lineaproducto", (data) => {
     productosdefs.Save(data).then((res) => {
       io.sockets.emit("lineaproducto2", res);
+    }).catch((err)=>{
+      loggerError.error(err);
+      res.status(err.status || 500).send(err.message)
     });
   });
 });
@@ -201,6 +246,9 @@ aplicacion.get(
     let nombre = peticion.user.username;
     productosdefs.getAll().then((res) => {
       respuesta.render("productos", { res, nombre });
+    }).catch((err)=>{
+      loggerError.error(err);
+      res.status(err.status || 500).send(err.message)
     });
 
     /* if (peticion.session.nombre) {
@@ -291,6 +339,12 @@ aplicacion.get("/api/randoms", (peticion, respuesta) => {
 
 
 });
+
+aplicacion.all('*', (req, res) => {
+  loggerWarn.warn(`${req.method} ${req.url}`)
+  res.status(404).send("No existe esa ruta");
+});
+
 
   //cierre del else de CLUSTER O FORK
 }
